@@ -33,6 +33,8 @@ class Event(db.Model):
     date = db.Column(db.String(50))
     location = db.Column(db.String(100))
     client_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # Add relationship to User model
+    client = db.relationship('User', backref='events', lazy=True)
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
