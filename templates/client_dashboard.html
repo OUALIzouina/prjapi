@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }}</h2>
+                    <p class="card-text">Manage your events and service providers all in one place.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Quick Actions</h4>
+                    <div class="btn-group">
+                        <button class="btn btn-success mr-2" data-toggle="modal" data-target="#createEventModal">
+                            <i class="fas fa-plus"></i> Create New Event
+                        </button>
+                        <a class="btn btn-primary mr-2" href="{{ url_for('browse_providers') }}">
+                            <i class="fas fa-search"></i> Find Service Providers
+                        </a>
+                        <button class="btn btn-info">
+                            <i class="fas fa-calendar"></i> View Calendar
+                        </button>
+                        <a class="btn btn-secondary" href="{{ url_for('my_bookings') }}">
+                            <i class="fas fa-list"></i> My Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="row">
+        <!-- Upcoming Events -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Your Events</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#upcoming" data-toggle="tab">Upcoming</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#past" data-toggle="tab">Past</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="upcoming">
+                            {% if events %}
+                                {% for event in events %}
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="card-title">{{ event.title }}</h5>
+                                                <p class="card-text">
+                                                    <i class="far fa-calendar"></i> {{ event.date }}
+                                                    <br>
+                                                    <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <a href="{{ url_for('browse_providers') }}?event_id={{ event.id }}" 
+                                                   class="btn btn-sm btn-outline-primary">Add Providers</a>
+                                                <button class="btn btn-sm btn-outline-info">Details</button>
+                                                <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No upcoming events. Why not <a href="#" data-toggle="modal" data-target="#createEventModal">create one</a>?</p>
+                            {% endif %}
+                        </div>
+                        <div class="tab-pane" id="past">
+                            <!-- Past events will be loaded here -->
+                            <p>No past events found.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Profile Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Profile Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Phone:</strong> {{ user.phone }}</p>
+                    <p><strong>Location:</strong> {{ user.wilaya }}</p>
+                    <button class="btn btn-outline-primary btn-block">Edit Profile</button>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <!-- Add timeline items here -->
+                        <p class="text-muted">No recent activity</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div class="modal fade" id="createEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Event</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('create_event') }}" method="POST">
+                    <div class="form-group">
+                        <label>Event Title</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" class="form-control" name="location" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Event Type</label>
+                        <select class="form-control" name="event_type">
+                            <option value="wedding">Wedding</option>
+                            <option value="corporate">Corporate Event</option>
+                            <option value="birthday">Birthday Party</option>
+                            <option value="conference">Conference</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

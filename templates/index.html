@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .hero-section {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1');
+        background-size: cover;
+        background-position: center;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        color: white;
+        position: relative;
+        margin-top: -2rem;
+    }
+
+    .feature-card {
+        padding: 2rem;
+        border-radius: 1rem;
+        background: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .service-icon {
+        font-size: 2.5rem;
+        color: #4F46E5;
+        margin-bottom: 1rem;
+    }
+
+    .stats-section {
+        background: linear-gradient(135deg, #4F46E5, #6366F1);
+        color: white;
+        padding: 4rem 0;
+    }
+
+    .stat-item h3 {
+        font-size: 3rem;
+        font-weight: bold;
+    }
+
+    .cta-section {
+        background: #F3F4F6;
+        padding: 6rem 0;
+    }
+
+    .testimonial-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 1rem 0;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, #4F46E5, #6366F1);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        border: none;
+        transition: transform 0.3s ease;
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-3px);
+        color: white;
+    }
+
+    .hero-buttons {
+        margin-top: 2rem;
+    }
+    
+    .hero-buttons .btn {
+        margin: 0.5rem;
+        padding: 12px 30px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-dark {
+        background: rgba(0, 0, 0, 0.7);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-dark:hover {
+        background: #000;
+        transform: translateY(-3px);
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-3 mb-4">Transform Your Events Management</h1>
+        <p class="lead mb-5" style="font-size: 1.5rem;">
+            Connect with the best event service providers in Algeria. 
+            From planning to execution, we make event management seamless.
+        </p>
+        {% if not current_user.is_authenticated %}
+            <div class="hero-buttons">
+                <a href="{{ url_for('register_client') }}" class="btn btn-gradient btn-lg mr-3">Plan Your Event</a>
+                <a href="{{ url_for('register_provider') }}" class="btn btn-outline-light btn-lg mr-3">Become a Provider</a>
+                <a href="{{ url_for('admin_login') }}" class="btn btn-dark btn-lg">
+                    <i class="fas fa-user-shield"></i> Admin Access
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Add this right after the hero section -->
+<div class="decorative-elements">
+    {% for i in range(10) %}
+    <div class="confetti" style="left: {{ i * 10 }}%; animation-delay: {{ i * 0.5 }}s;"></div>
+    {% endfor %}
+</div>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 gradient-text">Why Choose EzyEvents?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center floating">
+                    <div class="event-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h4 class="gradient-text">Trusted Providers</h4>
+                    <p>Connect with verified and experienced event service providers in your area.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h4>Easy Booking</h4>
+                    <p>Simple and secure booking process with real-time availability.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h4>Complete Management</h4>
+                    <p>Track all your events and bookings in one centralized dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add a new vibrant section -->
+<section class="py-5 bg-gradient text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="mb-4">Make Your Events Memorable</h2>
+                <p class="lead">From intimate gatherings to grand celebrations, we've got you covered.</p>
+                <div class="mt-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-check-circle mr-3"></i>
+                        <span>Professional Event Planning</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-check-circle mr-3"></i>
+                        <span>Customized Solutions</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle mr-3"></i>
+                        <span>Dedicated Support</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1" 
+                     class="img-fluid rounded-lg shadow-lg" alt="Event Planning">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4 stat-item">
+                <h3>500+</h3>
+                <p>Events Completed</p>
+            </div>
+            <div class="col-md-4 stat-item">
+                <h3>100+</h3>
+                <p>Service Providers</p>
+            </div>
+            <div class="col-md-4 stat-item">
+                <h3>48</h3>
+                <p>Wilayas Covered</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Our Services</h2>
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-crown service-icon"></i>
+                    <h5>Event Planning</h5>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-camera service-icon"></i>
+                    <h5>Photography</h5>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-utensils service-icon"></i>
+                    <h5>Catering</h5>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-music service-icon"></i>
+                    <h5>Entertainment</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">What Our Clients Say</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <p class="mb-3">"Amazing service! Made my wedding planning so much easier."</p>
+                    <strong>- Sarah B.</strong>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <p class="mb-3">"Professional providers and excellent coordination."</p>
+                    <strong>- Mohammed A.</strong>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <p class="mb-3">"Best platform for finding reliable event services."</p>
+                    <strong>- Karim H.</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Create Your Perfect Event?</h2>
+        <p class="lead mb-4">Join thousands of satisfied clients who trust EzyEvents</p>
+        {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('register') }}" class="btn btn-gradient btn-lg">Get Started Now</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Add event countdown timer -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create floating elements
+    for(let i = 0; i < 20; i++) {
+        const elem = document.createElement('div');
+        elem.className = 'floating-element';
+        elem.style.left = Math.random() * 100 + 'vw';
+        elem.style.animationDelay = Math.random() * 5 + 's';
+        document.body.appendChild(elem);
+    }
+});
+</script>
+{% endblock %}

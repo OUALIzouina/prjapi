@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center mb-5">Choose Registration Type</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">Client Registration</h3>
+                    <p class="card-text">Register as a client to book and manage events</p>
+                    <a href="{{ url_for('register_client') }}" class="btn btn-primary">Register as Client</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">Provider Registration</h3>
+                    <p class="card-text">Register as a service provider to offer your services</p>
+                    <a href="{{ url_for('register_provider') }}" class="btn btn-primary">Register as Provider</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

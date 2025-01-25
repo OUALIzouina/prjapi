@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .kanban-board {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .kanban-column {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .kanban-card {
+        background: white;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .column-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid;
+    }
+    
+    .requests-header { border-color: #ffc107; }
+    .payment-header { border-color: #17a2b8; }
+    .completed-header { border-color: #28a745; }
+</style>
+
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }}</h2>
+                    <p class="card-text">Manage your services and bookings all in one place.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Quick Actions</h4>
+                    <div class="btn-group">
+                        <button class="btn btn-success mr-2" data-toggle="modal" data-target="#addServiceModal">
+                            <i class="fas fa-plus"></i> Add New Service
+                        </button>
+                        <button class="btn btn-primary mr-2">
+                            <i class="fas fa-search"></i> Find Events
+                        </button>
+                        <button class="btn btn-info">
+                            <i class="fas fa-calendar"></i> View Calendar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+        <!-- Pending Requests Column -->
+        <div class="kanban-column">
+            <h4 class="column-header requests-header">
+                New Requests
+                <span class="badge badge-warning">{{ pending_requests|length }}</span>
+            </h4>
+            {% for booking in pending_requests %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <div class="btn-group">
+                        <form action="{{ url_for('accept_booking', booking_id=booking.id) }}" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-success mr-2">Accept</button>
+                        </form>
+                        <form action="{{ url_for('decline_booking', booking_id=booking.id) }}" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-danger">Decline</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- To Pay Column -->
+        <div class="kanban-column">
+            <h4 class="column-header payment-header">
+                Waiting Payment
+                <span class="badge badge-info">{{ to_pay|length }}</span>
+            </h4>
+            {% for booking in to_pay %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#paymentModal{{ booking.id }}">
+                        Confirm Payment
+                    </button>
+                </div>
+
+                <!-- Payment Confirmation Modal -->
+                <div class="modal fade" id="paymentModal{{ booking.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Payment</h5>
+                                <button type="button" class="close" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{{ url_for('confirm_payment', booking_id=booking.id) }}" method="POST">
+                                    <div class="form-group">
+                                        <label>Payment Amount (DZD)</label>
+                                        <input type="number" name="payment_amount" class="form-control" required min="0" step="0.01">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Payment Notes (optional)</label>
+                                        <textarea name="payment_notes" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Scheduled Column -->
+        <div class="kanban-column">
+            <h4 class="column-header scheduled-header">
+                Scheduled Events
+                <span class="badge badge-primary">{{ scheduled|length }}</span>
+            </h4>
+            {% for booking in scheduled %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <span class="badge badge-success">Payment Received</span>
+                    <form action="{{ url_for('complete_booking', booking_id=booking.id) }}" method="POST" class="mt-2">
+                        <button class="btn btn-sm btn-outline-success">Mark Event Complete</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Completed Column -->
+        <div class="kanban-column">
+            <h4 class="column-header completed-header">
+                Completed Events
+                <span class="badge badge-success">{{ completed|length }}</span>
+            </h4>
+            {% for booking in completed %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <span class="badge badge-success">Completed</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Service</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_service') }}" method="POST">
+                    <div class="form-group">
+                        <label>Service Title</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select class="form-control" name="category">
+                            <option value="Event Planning">Event Planning</option>
+                            <option value="Decoration & Styling">Decoration & Styling</option>
+                            <option value="Venue Booking">Venue Booking</option>
+                            <option value="Photography & Videography">Photography & Videography</option>
+                            <option value="Logistics Management">Logistics Management</option>
+                            <option value="Entertainment & Activities">Entertainment & Activities</option>
+                            <option value="Catering Services">Catering Services</option>
+                            <option value="Security & Access Control">Security & Access Control</option>
+                            <option value="Event Technologies">Event Technologies</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <!-- Event Selection -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>Select Event</h4>
+            <select class="form-control" id="eventSelector">
+                <option value="">Choose an event...</option>
+                {% for event in events %}
+                    <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <h2>Available Providers</h2>
+    <hr>
+    <div class="row">
+        {% for provider in providers %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>{{ provider.first_name }} {{ provider.last_name }}</h5>
+                    <p class="mb-1"><strong>Category:</strong> {{ provider.service_category }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ provider.wilaya }}</p>
+                    <p class="mb-1"><strong>Experience:</strong> {{ provider.experience }}</p>
+                    <hr>
+                    {% if provider.services %}
+                        <h6>Services Offered:</h6>
+                        <ul>
+                            {% for service in provider.services %}
+                                <li>{{ service.title }} - {{ service.category }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    <form action="{{ url_for('request_booking', provider_id=provider.id) }}" method="POST">
+                        <input type="hidden" name="event_id" class="event-id-input">
+                        <button type="submit" class="btn btn-primary btn-sm book-provider" disabled>Add to Event</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.getElementById('eventSelector').addEventListener('change', function() {
+    const eventId = this.value;
+    const bookButtons = document.querySelectorAll('.book-provider');
+    const eventInputs = document.querySelectorAll('.event-id-input');
+    
+    bookButtons.forEach(button => {
+        button.disabled = !eventId;
+    });
+    
+    eventInputs.forEach(input => {
+        input.value = eventId;
+    });
+});
+</script>
+{% endblock %}
