@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <h2 class="mb-4">Client Registration</h2>
+<div class="min-h-screen flex items-center  justify-center">
+    <div class="w-4/5 md:w-1/2 lg:w-2/4 p-7 bg-white rounded-xl shadow-lg">
+        <h2 class="mb-10 font-semibold text-center text-3xl">Client Registration</h2>
         <form method="POST">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="form-group">
                         <label>First Name</label>
                         <input type="text" name="first_name" class="form-control" required>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="form-group">
                         <label>Last Name</label>
                         <input type="text" name="last_name" class="form-control" required>
@@ -87,7 +87,7 @@
                     <option value="48-Relizane">48-Relizane</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Register</button>
+            <button type="submit" class="btn btn-primary center mt-12 w-full py-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 mx-auto block">Register</button>
         </form>
     </div>
 </div>

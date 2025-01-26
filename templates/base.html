@@ -58,13 +58,13 @@
     .card {
       border: none;
       border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      
       transition: all 0.3s ease;
     }
 
     .card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.288);
     }
 
     .animate-in {
@@ -165,27 +165,36 @@
         background: rgba(79, 70, 229, 0.1);
         color: #4F46E5;
     }
+    .bd{
+      background-color: #10103A;
+      ;
+    }
+    .bg{
+      background-color: #00D1FF;
+      ;
+      ;
+    }
   </style>
 </head>
 <body class="bg-gray-50">
   <!-- Navigation with Tailwind classes -->
-  <nav class="bg-white shadow-md">
+  <nav class="bd  shadow-md">
     <div class="container mx-auto px-4">
-      <div class="flex justify-between items-center py-4">
-        <a class="text-2xl font-bold text-indigo-600" href="{{ url_for('index') }}">
-          <span>E</span>zy<span>events</span>
+      <div class="flex justify-between items-center py-3">
+        <a href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='uploads/logo1.png') }}" alt="Ezyevents Logo" class="h-12">
         </a>
         <div class="flex items-center space-x-4">
-          <a class="hover:text-indigo-600" href="{{ url_for('index') }}">Home</a>
-          <a class="hover:text-indigo-600" href="#about">About Us</a>
-          <a class="hover:text-indigo-600" href="#services">Services</a>
-          <a class="hover:text-indigo-600" href="#contact">Contact</a>
+          <a class="hover:text-indigo-600 text-white" href="{{ url_for('index') }}">Home</a>
+          <a class="hover:text-indigo-600 text-white" href="#about">About Us</a>
+          <a class="hover:text-indigo-600 text-white" href="#services">Services</a>
+          <a class="hover:text-indigo-600 text-white" href="#contact">Contact</a>
           {% if current_user.is_authenticated %}
-            <a class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700" href="{{ url_for('logout') }}">Logout</a>
+            <a class="bg text-white px-4 py-2 rounded-full hover:bg-cyan-500 no-underline" href="{{ url_for('logout') }}">Logout</a>
           {% else %}
-            <a class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700" href="{{ url_for('login') }}">Login</a>
-            <a class="bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-900" href="{{ url_for('admin_login') }}">
-              <i class="fas fa-user-shield"></i> Admin
+            <a class="bg text-white px-4 py-2  rounded-full hover:bg-cyan-500 hover:no-underline" href="{{ url_for('login') }}">Login</a>
+            <a class="bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-900 hover:no-underline" href="{{ url_for('admin_login') }}">
+              <i class="fas fa-user-shield "></i> Admin
             </a>
           {% endif %}
         </div>
@@ -208,7 +217,7 @@
   </div>
 
   <!-- Footer with Tailwind classes -->
-  <footer class="bg-gray-800 text-white mt-16">
+  <footer class="bd text-white "  >
     <div class="container mx-auto px-4 py-16">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
