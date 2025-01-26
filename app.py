@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -229,8 +230,16 @@ def register():
 @app.route('/register/client', methods=['GET', 'POST'])
 def register_client():
     if request.method == 'POST':
+        email = request.form.get('email')
+        # Check if email already exists in the database
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('Email already exists. Please use a different email or log in.', 'danger')
+            return redirect(url_for('register_client'))
+
+        # Create a new user if the email doesn't exist
         new_user = User(
-            email=request.form.get('email'),
+            email=email,
             password=request.form.get('password'),
             role='client',
             first_name=request.form.get('first_name'),
@@ -243,13 +252,26 @@ def register_client():
         db.session.commit()
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
+    
     return render_template('register_client.html')
+
+
+
 
 @app.route('/register/provider', methods=['GET', 'POST'])
 def register_provider():
     if request.method == 'POST':
+        email = request.form.get('email')
+        
+        # Check if the email already exists in the database
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('Email already exists. Please use a different email.', 'danger')
+            return redirect(url_for('register_provider'))
+        
+        # Create a new user object
         new_user = User(
-            email=request.form.get('email'),
+            email=email,
             password=request.form.get('password'),
             role='provider',
             first_name=request.form.get('first_name'),
@@ -262,10 +284,18 @@ def register_provider():
             certification=request.form.get('certification'),
             study_degree=request.form.get('study_degree')
         )
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Registration successful! Please login.', 'success')
-        return redirect(url_for('login'))
+        
+        try:
+            # Add and commit the new user to the database
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('An error occurred during registration. Please try again.', 'danger')
+    
+    # Render the registration template for GET requests or on errors
     return render_template('register_provider.html')
 
 @app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
@@ -727,4 +757,4 @@ if __name__ == '__main__':
         db.session.commit()
     
     # Run the app on 0.0.0.0 and a custom port (optional)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5002)

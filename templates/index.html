@@ -1,16 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
-    .hero-section {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1');
+   .hero-section {
+        background-image:  url('../static/assets/background.jpg');
         background-size: cover;
-        background-position: center;
-        height: 100vh;
+        background-position: center/cover ;
+        height: 90vh;
         display: flex;
         align-items: center;
         color: white;
         position: relative;
         margin-top: -2rem;
+        width: 100%;
     }
 
     .feature-card {
@@ -57,7 +58,7 @@
     }
 
     .btn-gradient {
-        background: linear-gradient(135deg, #4F46E5, #6366F1);
+        background: #00D1FF;
         color: white;
         padding: 1rem 2rem;
         border-radius: 2rem;
@@ -112,15 +113,24 @@
 </style>
 
 <!-- Hero Section -->
-<section class="hero-section">
-    <div class="container text-center">
-        <h1 class="display-3 mb-4">Transform Your Events Management</h1>
-        <p class="lead mb-5" style="font-size: 1.5rem;">
-            Connect with the best event service providers in Algeria. 
-            From planning to execution, we make event management seamless.
-        </p>
+<section class="hero-section ">
+    <div >
+      
+        <div class="text-white d-flex flex-column  align-items-start pt-5 mt-5 mb-0 ms-5 w-50" style="margin-left: 10%;">
+            <div class="font-weight-semibold " style="font-family: 'Poppins', sans-serif; font-size: 25px;color: #00D1FF; line-height: 37.5px;">
+                EVENTS ORGANIZATION
+              </div>
+              <h1 class="mt-3 font-weight-semibold" style="font-size: 48px;line-height: 60px;">
+                Sophisticated tools, extraordinary events, remarkable moments.
+              </h1>
+              <div class="font-weight-normal" style="font-size: 18px; line-height: 27px; margin-top: 2rem;">
+                Streamlined tools for effortless event management, from ticketing to execution—designed to make your events unforgettable.
+              </div>
+              
+        
+          </div>
         {% if not current_user.is_authenticated %}
-            <div class="hero-buttons">
+            <div class="hero-buttons " style="padding: 20px; ">
                 <a href="{{ url_for('register_client') }}" class="btn btn-gradient btn-lg mr-3">Plan Your Event</a>
                 <a href="{{ url_for('register_provider') }}" class="btn btn-outline-light btn-lg mr-3">Become a Provider</a>
                 <a href="{{ url_for('admin_login') }}" class="btn btn-dark btn-lg">
@@ -149,10 +159,13 @@
 </script>
 
 <!-- Features Section -->
-<section class="py-5">
+
+<section class="py-5 "id="about">
     <div class="container">
-        <h2 class="text-center mb-5 gradient-text">Why Choose EzyEvents?</h2>
-        <div class="row">
+        <h2 class="text-center mb-5" style="font-size: 48px; font-weight: 700;">
+            Why <span class="gradient-text">Choose</span> EzyEvents?
+          </h2>
+                  <div class="row">
             <div class="col-md-4 mb-4">
                 <div class="feature-card text-center floating">
                     <div class="event-icon">
@@ -207,7 +220,7 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1" 
+                <img src="../static/assets/event.jpeg" 
                      class="img-fluid rounded-lg shadow-lg" alt="Event Planning">
             </div>
         </div>
@@ -235,9 +248,11 @@
 </section>
 
 <!-- Services Section -->
-<section class="py-5">
+<section class="py-5" id="services">
     <div class="container">
-        <h2 class="text-center mb-5">Our Services</h2>
+        <h2 class="text-center mb-5" style="font-size: 48px; font-weight: 700;">
+            Our <span class="gradient-text">Services</span> 
+          </h2>
         <div class="row">
             <div class="col-md-3 mb-4">
                 <div class="feature-card text-center">
@@ -268,7 +283,7 @@
 </section>
 
 <!-- Event Types Showcase -->
-<section class="py-16 bg-gradient-to-r from-indigo-500 to-purple-600">
+<section class="py-16 -to-r rounded-xl from-indigo-500 to-purple-600" style="background-color: #2C2CA0CC;">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold text-center text-white mb-12">Types of Events We Handle</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -299,7 +314,7 @@
 <!-- Featured Providers -->
 <section class="py-16 bg-gray-50">
     <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center mb-12">Featured Service Providers</h2>
+        <h2 class="text-3xl font-bold text-center mb-12">Featured  <span class="gradient-text">Service Providers</span></h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6" class="w-full h-48 object-cover" alt="provider">
@@ -327,7 +342,7 @@
 <!-- FAQ Section -->
 <section class="py-16">
     <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+        <h2 class="text-3xl font-bold text-center mb-12">Frequently <span class="gradient-text">Asked Questions</span> </h2>
         <div class="max-w-3xl mx-auto space-y-4">
             <div class="border border-gray-200 rounded-lg">
                 <button class="w-full text-left px-6 py-4 focus:outline-none">
@@ -348,7 +363,7 @@
 
 
 <!-- Newsletter Section -->
-<section class="py-16 bg-indigo-100">
+<section class="py-16 rounded-xl bg-indigo-100">
     <div class="container mx-auto px-4 text-center">
         <h2 class="text-3xl font-bold mb-4">Stay Updated</h2>
         <p class="mb-8">Subscribe to our newsletter for the latest event planning tips and trends</p>
@@ -364,7 +379,7 @@
 <!-- Testimonials Section -->
 <section class="py-5 bg-light">
     <div class="container">
-        <h2 class="text-center mb-5">What Our Clients Say</h2>
+        <h2 class="text-3xl font-bold text-center mb-12">What <span class="gradient-text">Our Clients </span> Say</h2>
         <div class="row">
             <div class="col-md-4">
                 <div class="testimonial-card">
@@ -389,9 +404,9 @@
 </section>
 
 <!-- CTA Section -->
-<section class="cta-section">
+<section class="cta-section rounded-xl">
     <div class="container text-center">
-        <h2 class="mb-4">Ready to Create Your Perfect Event?</h2>
+        <h2 class="text-3xl font-semibold text-center  mb-3">Ready to Create Your Perfect Event?</h2>
         <p class="lead mb-4">Join thousands of satisfied clients who trust EzyEvents</p>
         {% if not current_user.is_authenticated %}
             <a href="{{ url_for('register') }}" class="btn btn-gradient btn-lg">Get Started Now</a>
