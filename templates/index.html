@@ -82,6 +82,19 @@
         letter-spacing: 1px;
         transition: all 0.3s ease;
     }
+
+    .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #4F46E5;
+        animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+        0% { transform: translateY(-100vh) rotate(0deg); }
+        100% { transform: translateY(100vh) rotate(360deg); }
+    }
     
     .btn-dark {
         background: rgba(0, 0, 0, 0.7);
@@ -115,11 +128,21 @@
 </section>
 
 <!-- Add this right after the hero section -->
-<div class="decorative-elements">
-    {% for i in range(10) %}
-    <div class="confetti" style="left: {{ i * 10 }}%; animation-delay: {{ i * 0.5 }}s;"></div>
-    {% endfor %}
+<div class="decorative-elements" id="confetti-container">
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('confetti-container');
+        for (let i = 0; i < 10; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = (i * 10) + '%';
+            confetti.style.animationDelay = (i * 0.5) + 's';
+            container.appendChild(confetti);
+        }
+    });
+</script>
 
 <!-- Features Section -->
 <section class="py-5">
@@ -237,6 +260,100 @@
                 </div>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- Event Types Showcase -->
+<section class="py-16 bg-gradient-to-r from-indigo-500 to-purple-600">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center text-white mb-12">Types of Events We Handle</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl p-6 transform hover:scale-105 transition duration-300">
+                <i class="fas fa-heart text-4xl text-pink-500 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Weddings</h3>
+                <p class="text-gray-600">Make your special day truly memorable</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 transform hover:scale-105 transition duration-300">
+                <i class="fas fa-birthday-cake text-4xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Birthday Parties</h3>
+                <p class="text-gray-600">Celebrate another year in style</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 transform hover:scale-105 transition duration-300">
+                <i class="fas fa-briefcase text-4xl text-green-500 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Corporate Events</h3>
+                <p class="text-gray-600">Professional events that impress</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 transform hover:scale-105 transition duration-300">
+                <i class="fas fa-graduation-cap text-4xl text-yellow-500 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Graduations</h3>
+                <p class="text-gray-600">Celebrate academic achievements</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Providers -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">Featured Service Providers</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6" class="w-full h-48 object-cover" alt="provider">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold mb-2">Royal Events</h3>
+                    <p class="text-gray-600 mb-4">Specializing in luxury weddings and corporate events</p>
+                    <div class="flex items-center text-yellow-400 mb-4">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="text-gray-600 ml-2">(48 reviews)</span>
+                    </div>
+                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition duration-300">
+                        View Profile
+                    </button>
+                </div>
+            </div>
+            <!-- Add 2 more similar provider cards -->
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-16">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="border border-gray-200 rounded-lg">
+                <button class="w-full text-left px-6 py-4 focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold">How does booking work?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="mt-2 text-gray-600">
+                        Simply browse our providers, select your preferred service, choose your date, and make a booking request. The provider will confirm within 24 hours.
+                    </div>
+                </button>
+            </div>
+            <!-- Add more FAQ items -->
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Newsletter Section -->
+<section class="py-16 bg-indigo-100">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Stay Updated</h2>
+        <p class="mb-8">Subscribe to our newsletter for the latest event planning tips and trends</p>
+        <form class="max-w-md mx-auto flex">
+            <input type="email" placeholder="Enter your email" class="flex-1 px-4 py-2 rounded-l-lg focus:outline-none">
+            <button class="bg-indigo-600 text-white px-6 py-2 rounded-r-lg hover:bg-indigo-700 transition duration-300">
+                Subscribe
+            </button>
+        </form>
     </div>
 </section>
 

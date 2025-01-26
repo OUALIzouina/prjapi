@@ -2,12 +2,29 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ezyevent.db'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Add this function to check provider availability
+def is_provider_available(provider_id):
+    # Get current bookings (you might want to adjust the logic based on your needs)
+    current_bookings = Booking.query.filter_by(
+        provider_id=provider_id,
+        status='confirmed'
+    ).all()
+    return len(current_bookings) < 3  # Example: provider is available if they have less than 3 active bookings
 
 # Database Models
 class User(UserMixin, db.Model):
@@ -26,6 +43,9 @@ class User(UserMixin, db.Model):
     experience = db.Column(db.String(500))
     certification = db.Column(db.String(500))
     study_degree = db.Column(db.String(100))
+    profile_pic = db.Column(db.String(200))  # Add this line for profile picture
+    about = db.Column(db.Text)  # Add this line
+    is_available = db.Column(db.Boolean, default=True)  # Add this line
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +56,7 @@ class Event(db.Model):
     # Add relationship to User model
     client = db.relationship('User', backref='events', lazy=True)
 
+# Update Booking model to match the database schema
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
@@ -43,6 +64,10 @@ class Booking(db.Model):
     status = db.Column(db.String(20))  # 'pending', 'confirmed', 'cancelled', 'completed'
     payment_status = db.Column(db.String(20), default='pending')  # 'pending', 'paid'
     payment_amount = db.Column(db.Float, nullable=True)
+    provider_payment = db.Column(db.Float, nullable=True)  # Amount paid to provider
+    provider_payment_status = db.Column(db.String(20), default='pending')  # 'pending', 'paid'
+    platform_fee_percentage = db.Column(db.Float, default=20)  # Platform keeps 20%
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     event = db.relationship('Event', backref='bookings', lazy=True)
     provider = db.relationship('User', backref='my_bookings', lazy=True)
 
@@ -55,6 +80,22 @@ class Service(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Add relationship to User model
     provider = db.relationship('User', backref=db.backref('services', lazy=True))
+
+class Portfolio(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    provider_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    image_path = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    provider = db.relationship('User', backref='portfolio_items')
+    title = db.Column(db.String(100))  # Add this line
+    images = db.relationship('PortfolioImage', backref='portfolio_item', cascade='all, delete-orphan')
+
+class PortfolioImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'))
+    image_path = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -97,12 +138,38 @@ def admin_dashboard():
     if current_user.role != 'admin':
         return redirect(url_for('admin_login'))
     
-    # Gather statistics
+    # Calculate total revenue and provider payments
+    completed_bookings = Booking.query.filter_by(payment_status='paid').all()
+    total_revenue = sum(booking.payment_amount for booking in completed_bookings if booking.payment_amount)
+    platform_revenue = sum(booking.payment_amount * (booking.platform_fee_percentage/100) 
+                         for booking in completed_bookings if booking.payment_amount)
+    
+    # Get provider earnings
+    providers = User.query.filter_by(role='provider').all()
+    provider_earnings = {}
+    for provider in providers:
+        provider_bookings = Booking.query.filter_by(
+            provider_id=provider.id,
+            payment_status='paid'
+        ).all()
+        total_earnings = sum(booking.payment_amount * ((100-booking.platform_fee_percentage)/100) 
+                           for booking in provider_bookings if booking.payment_amount)
+        paid_amount = sum(booking.provider_payment or 0 
+                         for booking in provider_bookings if booking.provider_payment_status == 'paid')
+        pending_amount = total_earnings - paid_amount
+        provider_earnings[provider.id] = {
+            'total': total_earnings,
+            'paid': paid_amount,
+            'pending': pending_amount
+        }
+    
     stats = {
         'total_users': User.query.count(),
         'total_events': Event.query.count(),
         'total_providers': User.query.filter_by(role='provider').count(),
-        'total_bookings': Booking.query.count()
+        'total_bookings': Booking.query.count(),
+        'total_revenue': total_revenue,
+        'platform_revenue': platform_revenue
     }
     
     # Gather data for each tab
@@ -116,7 +183,27 @@ def admin_dashboard():
                          users=users,
                          events=events,
                          providers=providers,
-                         bookings=bookings)
+                         bookings=bookings,
+                         provider_earnings=provider_earnings)
+
+@app.route('/admin/pay_provider/<int:booking_id>', methods=['POST'])
+@login_required
+def pay_provider(booking_id):
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    
+    booking = Booking.query.get_or_404(booking_id)
+    if booking.payment_status != 'paid':
+        flash('Cannot pay provider before client payment is confirmed', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
+    provider_amount = booking.payment_amount * ((100-booking.platform_fee_percentage)/100)
+    booking.provider_payment = provider_amount
+    booking.provider_payment_status = 'paid'
+    db.session.commit()
+    
+    flash(f'Provider payment of {provider_amount} DZD processed successfully', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -224,6 +311,20 @@ def provider_dashboard():
     if current_user.role != 'provider':
         return redirect(url_for('index'))
     
+    # Calculate earnings
+    completed_bookings = Booking.query.filter_by(
+        provider_id=current_user.id,
+        payment_status='paid'
+    ).all()
+    
+    total_earnings = sum(booking.payment_amount * ((100-booking.platform_fee_percentage)/100) 
+                        for booking in completed_bookings if booking.payment_amount)
+    
+    paid_amount = sum(booking.provider_payment or 0 
+                     for booking in completed_bookings if booking.provider_payment_status == 'paid')
+    
+    pending_amount = total_earnings - paid_amount
+    
     pending_requests = Booking.query.filter_by(
         provider_id=current_user.id,
         status='pending'
@@ -251,7 +352,10 @@ def provider_dashboard():
                          pending_requests=pending_requests,
                          to_pay=to_pay,
                          scheduled=scheduled,
-                         completed=completed)
+                         completed=completed,
+                         total_earnings=total_earnings,
+                         paid_amount=paid_amount,
+                         pending_amount=pending_amount)
 
 @app.route('/add_service', methods=['POST'])
 @login_required
@@ -409,13 +513,217 @@ def provider_details(provider_id):
         'certification': provider.certification
     })
 
+@app.route('/upload_profile_pic', methods=['POST'])
+@login_required
+def upload_profile_pic():
+    if 'file' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('provider_dashboard'))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect(url_for('provider_dashboard'))
+        
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # Create unique filename using user_id
+        ext = filename.rsplit('.', 1)[1].lower()
+        new_filename = f"profile_{current_user.id}.{ext}"
+        
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+            
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], new_filename))
+        current_user.profile_pic = new_filename
+        db.session.commit()
+        flash('Profile picture updated successfully', 'success')
+    
+    return redirect(url_for('provider_dashboard'))
+
+@app.route('/add_portfolio', methods=['POST'])
+@login_required
+def add_portfolio():
+    if current_user.role != 'provider':
+        return redirect(url_for('index'))
+        
+    files = request.files.getlist('images')
+    if not files or not files[0].filename:
+        flash('No image files', 'error')
+        return redirect(url_for('provider_dashboard'))
+    
+    if len(files) > 3:
+        flash('Maximum 3 images allowed per portfolio item', 'error')
+        return redirect(url_for('provider_dashboard'))
+
+    new_portfolio = Portfolio(
+        provider_id=current_user.id,
+        title=request.form.get('title'),
+        description=request.form.get('description', '')
+    )
+    db.session.add(new_portfolio)
+    
+    for file in files:
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            ext = filename.rsplit('.', 1)[1].lower()
+            new_filename = f"portfolio_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(new_portfolio.images)}.{ext}"
+            
+            if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                os.makedirs(app.config['UPLOAD_FOLDER'])
+                
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], new_filename))
+            
+            portfolio_image = PortfolioImage(
+                portfolio_id=new_portfolio.id,
+                image_path=new_filename
+            )
+            new_portfolio.images.append(portfolio_image)
+    
+    db.session.commit()
+    flash('Portfolio item added successfully', 'success')
+    return redirect(url_for('provider_dashboard'))
+
+@app.route('/portfolio/<int:item_id>/details')
+@login_required
+def portfolio_details(item_id):
+    portfolio_item = Portfolio.query.get_or_404(item_id)
+    return jsonify({
+        'title': portfolio_item.title,
+        'images': [{'path': img.image_path} for img in portfolio_item.images],
+        'description': portfolio_item.description,
+        'created_at': portfolio_item.created_at.strftime('%Y-%m-%d')
+    })
+
+@app.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    if current_user.role != 'provider':
+        return redirect(url_for('index'))
+        
+    current_user.about = request.form.get('about', '')
+    current_user.experience = request.form.get('experience', '')
+    current_user.phone = request.form.get('phone', '')
+    current_user.address = request.form.get('address', '')
+    
+    db.session.commit()
+    flash('Profile updated successfully', 'success')
+    return redirect(url_for('provider_dashboard'))
+
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/provider/<int:provider_id>/profile')
+def provider_profile(provider_id):
+    provider = User.query.filter_by(id=provider_id, role='provider').first_or_404()
+    is_available = is_provider_available(provider_id)
+    
+    return render_template('provider_profile.html', 
+                         provider=provider,
+                         is_available=is_available)
+
+@app.route('/providers/search')
+def search_providers():
+    category = request.args.get('category')
+    wilaya = request.args.get('wilaya')
+    query = User.query.filter_by(role='provider')
+    
+    if category:
+        query = query.filter_by(service_category=category)
+    if wilaya:
+        query = query.filter_by(wilaya=wilaya)
+        
+    providers = query.all()
+    return render_template('providers.html', providers=providers)
+
+@app.route('/toggle_availability', methods=['POST'])
+@login_required
+def toggle_availability():
+    if current_user.role != 'provider':
+        return redirect(url_for('index'))
+    
+    current_user.is_available = not current_user.is_available
+    db.session.commit()
+    flash('Availability status updated successfully', 'success')
+    return redirect(url_for('provider_dashboard'))
+
+# Add these new routes
+@app.route('/event/<int:event_id>/details')
+@login_required
+def event_details(event_id):
+    if current_user.role != 'client':
+        return redirect(url_for('index'))
+    
+    event = Event.query.get_or_404(event_id)
+    if event.client_id != current_user.id:
+        return redirect(url_for('client_dashboard'))
+        
+    # Get all bookings for this event
+    bookings = Booking.query.filter_by(event_id=event.id).all()
+    
+    return render_template('event_details.html', event=event, bookings=bookings)
+
+@app.route('/event/<int:event_id>/cancel', methods=['POST'])
+@login_required
+def cancel_event(event_id):
+    if current_user.role != 'client':
+        return redirect(url_for('index'))
+    
+    event = Event.query.get_or_404(event_id)
+    if event.client_id != current_user.id:
+        return redirect(url_for('client_dashboard'))
+    
+    # Cancel all associated bookings
+    bookings = Booking.query.filter_by(event_id=event.id).all()
+    for booking in bookings:
+        booking.status = 'cancelled'
+    
+    db.session.delete(event)
+    db.session.commit()
+    flash('Event cancelled successfully', 'success')
+    return redirect(url_for('client_dashboard'))
+
+@app.route('/event/<int:event_id>/complete', methods=['POST'])
+@login_required
+def mark_event_complete(event_id):
+    if current_user.role != 'client':
+        return redirect(url_for('index'))
+    
+    event = Event.query.get_or_404(event_id)
+    if event.client_id != current_user.id:
+        return redirect(url_for('client_dashboard'))
+    
+    # Mark all confirmed bookings as completed
+    bookings = Booking.query.filter_by(
+        event_id=event.id,
+        status='confirmed'
+    ).all()
+    
+    for booking in bookings:
+        booking.status = 'completed'
+    
+    db.session.commit()
+    flash('Event marked as completed', 'success')
+    return redirect(url_for('client_dashboard'))
+
 if __name__ == '__main__':
     with app.app_context():
+        # Drop all tables and recreate them
+        db.drop_all()
         db.create_all()
+        
+        # Create admin user
+        admin = User(
+            email='admin@ezyevents.com',
+            password='admin',
+            role='admin',
+            first_name='Admin',
+            last_name='User'
+        )
+        db.session.add(admin)
+        db.session.commit()
+    
     app.run(debug=True)

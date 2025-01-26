@@ -69,6 +69,22 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="stats-card card bg-success text-white mb-3">
+                <div class="card-body">
+                    <h3 class="card-title">{{ "{:,.2f}".format(stats.total_revenue) }} DZD</h3>
+                    <p class="card-text">Total Revenue</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card card bg-info text-white mb-3">
+                <div class="card-body">
+                    <h3 class="card-title">{{ "{:,.2f}".format(stats.platform_revenue) }} DZD</h3>
+                    <p class="card-text">Platform Revenue (20%)</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Main Content Tabs -->
@@ -86,6 +102,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#bookings" data-toggle="tab">Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#payments" data-toggle="tab">Provider Payments</a>
                 </li>
             </ul>
         </div>
@@ -118,8 +137,8 @@
                                     <span class="badge badge-success">Active</span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editUser({{ user.id }})">Edit</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteUser({{ user.id }})">Delete</button>
+                                    <button class="btn btn-sm btn-primary" onclick="editUser('{{ user.id }}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.id }}')">Delete</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -236,6 +255,44 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Provider Payments Tab -->
+            <div class="tab-pane" id="payments">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Total Earnings</th>
+                                <th>Paid Amount</th>
+                                <th>Pending Payment</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for provider in providers %}
+                            {% set earnings = provider_earnings[provider.id] %}
+                            <tr>
+                                <td>{{ provider.first_name }} {{ provider.last_name }}</td>
+                                <td>{{ "{:,.2f}".format(earnings.total) }} DZD</td>
+                                <td>{{ "{:,.2f}".format(earnings.paid) }} DZD</td>
+                                <td>{{ "{:,.2f}".format(earnings.pending) }} DZD</td>
+                                <td>
+                                    {% if earnings.pending > 0 %}
+                                        <button class="btn btn-sm btn-success" 
+                                                onclick="processPayment('{{ provider.id }}')">
+                                            Process Payment
+                                        </button>
+                                    {% else %}
+                                        <span class="badge badge-success">All Paid</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -250,6 +307,18 @@ function deleteUser(userId) {
     if(confirm('Are you sure you want to delete this user?')) {
         // Implement user deletion
         fetch(`/admin/delete_user/${userId}`, {
+            method: 'POST'
+        }).then(response => {
+            if(response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function processPayment(providerId) {
+    if(confirm('Process payment for this provider?')) {
+        fetch(`/admin/pay_provider/${providerId}`, {
             method: 'POST'
         }).then(response => {
             if(response.ok) {

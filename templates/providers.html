@@ -1,43 +1,95 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
-    <!-- Event Selection -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h4>Select Event</h4>
-            <select class="form-control" id="eventSelector">
-                <option value="">Choose an event...</option>
-                {% for event in events %}
-                    <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
-                {% endfor %}
-            </select>
+    <!-- Event Selection Modal -->
+    <div class="modal fade" id="eventSelectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Event</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookingForm" method="POST">
+                        <div class="form-group">
+                            <label>Choose Event</label>
+                            <select name="event_id" class="form-control" required>
+                                {% for event in events %}
+                                <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Request Booking</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
-    <h2>Available Providers</h2>
-    <hr>
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ url_for('search_providers') }}" method="GET" class="row">
+                <div class="col-md-4">
+                    <select name="category" class="form-control">
+                        <option value="">All Categories</option>
+                        <option value="Event Planning">Event Planning</option>
+                        <option value="Decoration & Styling">Decoration & Styling</option>
+                        <!-- Add other categories -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="wilaya" class="form-control">
+                        <option value="">All Wilayas</option>
+                        <!-- Add wilayas -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Providers Grid -->
     <div class="row">
         {% for provider in providers %}
-        <div class="col-md-4 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5>{{ provider.first_name }} {{ provider.last_name }}</h5>
-                    <p class="mb-1"><strong>Category:</strong> {{ provider.service_category }}</p>
-                    <p class="mb-1"><strong>Location:</strong> {{ provider.wilaya }}</p>
-                    <p class="mb-1"><strong>Experience:</strong> {{ provider.experience }}</p>
-                    <hr>
-                    {% if provider.services %}
-                        <h6>Services Offered:</h6>
-                        <ul>
-                            {% for service in provider.services %}
-                                <li>{{ service.title }} - {{ service.category }}</li>
-                            {% endfor %}
-                        </ul>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="position-relative">
+                    {% if provider.profile_pic %}
+                    <img src="{{ url_for('static', filename='uploads/' + provider.profile_pic) }}" 
+                         class="card-img-top" alt="{{ provider.first_name }}"
+                         style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='uploads/default.jpg') }}" 
+                         class="card-img-top" alt="Default profile"
+                         style="height: 200px; object-fit: cover;">
                     {% endif %}
-                    <form action="{{ url_for('request_booking', provider_id=provider.id) }}" method="POST">
-                        <input type="hidden" name="event_id" class="event-id-input">
-                        <button type="submit" class="btn btn-primary btn-sm book-provider" disabled>Add to Event</button>
-                    </form>
+                    <div class="position-absolute top-0 right-0 m-2">
+                        <span class="badge {% if provider.is_available %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ 'Available' if provider.is_available else 'Busy' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ provider.first_name }} {{ provider.last_name }}</h5>
+                    <p class="card-text">{{ provider.service_category }}</p>
+                    <p class="text-muted">{{ provider.wilaya }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('provider_profile', provider_id=provider.id) }}" 
+                           class="btn btn-primary">View Profile</a>
+                        {% if provider.is_available %}
+                        <button class="btn btn-success btn-sm" 
+                                onclick="showBookingModal('{{ provider.id }}')"
+                                {% if not events %}disabled{% endif %}
+                                title="{% if not events %}Please create an event first{% endif %}">
+                            Book Now
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -46,18 +98,10 @@
 </div>
 
 <script>
-document.getElementById('eventSelector').addEventListener('change', function() {
-    const eventId = this.value;
-    const bookButtons = document.querySelectorAll('.book-provider');
-    const eventInputs = document.querySelectorAll('.event-id-input');
-    
-    bookButtons.forEach(button => {
-        button.disabled = !eventId;
-    });
-    
-    eventInputs.forEach(input => {
-        input.value = eventId;
-    });
-});
+function showBookingModal(providerId) {
+    const form = document.getElementById('bookingForm');
+    form.action = "{{ url_for('request_booking', provider_id=0) }}".replace('0', providerId);
+    $('#eventSelectionModal').modal('show');
+}
 </script>
 {% endblock %}

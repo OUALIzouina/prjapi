@@ -57,32 +57,44 @@
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active" id="upcoming">
-                            {% if events %}
-                                {% for event in events %}
-                                <div class="card mb-2">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <h5 class="card-title">{{ event.title }}</h5>
-                                                <p class="card-text">
-                                                    <i class="far fa-calendar"></i> {{ event.date }}
-                                                    <br>
-                                                    <i class="fas fa-map-marker-alt"></i> {{ event.location }}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <a href="{{ url_for('browse_providers') }}?event_id={{ event.id }}" 
-                                                   class="btn btn-sm btn-outline-primary">Add Providers</a>
-                                                <button class="btn btn-sm btn-outline-info">Details</button>
-                                                <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="mb-4">My Events</h4>
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Event</th>
+                                                            <th>Date</th>
+                                                            <th>Location</th>
+                                                            <th>Providers</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for event in events %}
+                                                        <tr>
+                                                            <td>{{ event.title }}</td>
+                                                            <td>{{ event.date }}</td>
+                                                            <td>{{ event.location }}</td>
+                                                            <td>{{ event.bookings|length }}</td>
+                                                            <td>
+                                                                <a href="{{ url_for('event_details', event_id=event.id) }}" 
+                                                                   class="btn btn-sm btn-info">
+                                                                    View Details
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                {% endfor %}
-                            {% else %}
-                                <p>No upcoming events. Why not <a href="#" data-toggle="modal" data-target="#createEventModal">create one</a>?</p>
-                            {% endif %}
+                            </div>
                         </div>
                         <div class="tab-pane" id="past">
                             <!-- Past events will be loaded here -->

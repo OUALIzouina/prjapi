@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>{{ event.title }}</h2>
+                        <div>
+                            <form action="{{ url_for('cancel_event', event_id=event.id) }}" 
+                                  method="POST" class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to cancel this event?');">
+                                <button type="submit" class="btn btn-danger">Cancel Event</button>
+                            </form>
+                            <form action="{{ url_for('mark_event_complete', event_id=event.id) }}" 
+                                  method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-success">Mark Complete</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Date:</strong> {{ event.date }}</p>
+                            <p><strong>Location:</strong> {{ event.location }}</p>
+                        </div>
+                    </div>
+
+                    <h4 class="mb-3">Service Providers</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Provider Name</th>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Payment Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.provider.first_name }} {{ booking.provider.last_name }}</td>
+                                    <td>{{ booking.provider.service_category }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ {
+                                            'pending': 'warning',
+                                            'confirmed': 'success',
+                                            'cancelled': 'danger',
+                                            'completed': 'info'
+                                        }[booking.status] }}">
+                                            {{ booking.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ 'success' if booking.payment_status == 'paid' else 'warning' }}">
+                                            {{ booking.payment_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if booking.status == 'confirmed' %}
+                                        <a href="{{ url_for('provider_details', provider_id=booking.provider_id) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            Contact Provider
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

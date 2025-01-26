@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EzyEvent</title>
+  <!-- Bootstrap -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -164,37 +167,24 @@
     }
   </style>
 </head>
-<body>
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
-    <div class="container">
-      <a class="navbar-brand" href="{{ url_for('index') }}">
-        <span class="text-primary">E</span>zy<span class="text-primary">events</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#about">About Us</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#services">Services</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#contact">Contact</a>
-          </li>
-        </ul>
-        <div class="auth-buttons">
+<body class="bg-gray-50">
+  <!-- Navigation with Tailwind classes -->
+  <nav class="bg-white shadow-md">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center py-4">
+        <a class="text-2xl font-bold text-indigo-600" href="{{ url_for('index') }}">
+          <span>E</span>zy<span>events</span>
+        </a>
+        <div class="flex items-center space-x-4">
+          <a class="hover:text-indigo-600" href="{{ url_for('index') }}">Home</a>
+          <a class="hover:text-indigo-600" href="#about">About Us</a>
+          <a class="hover:text-indigo-600" href="#services">Services</a>
+          <a class="hover:text-indigo-600" href="#contact">Contact</a>
           {% if current_user.is_authenticated %}
-            <a class="nav-link nav-btn btn-login" href="{{ url_for('logout') }}">Logout</a>
+            <a class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700" href="{{ url_for('logout') }}">Logout</a>
           {% else %}
-            <a class="nav-link nav-btn btn-login" href="{{ url_for('login') }}">Login</a>
-            <a class="nav-link nav-btn btn-admin" href="{{ url_for('admin_login') }}">
+            <a class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700" href="{{ url_for('login') }}">Login</a>
+            <a class="bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-900" href="{{ url_for('admin_login') }}">
               <i class="fas fa-user-shield"></i> Admin
             </a>
           {% endif %}
@@ -204,44 +194,46 @@
   </nav>
 
   <!-- Main Content -->
-  <div class="container mt-4">
+  <div class="container mx-auto mt-8 px-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
+          <div class="bg-{{ category }}-100 border-l-4 border-{{ category }}-500 text-{{ category }}-700 p-4 mb-4">
+            {{ message }}
+          </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
   </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-4 mb-4">
-          <h3 class="mb-4">EzyEvents</h3>
-          <p>Contact: +213 0123 456 789</p>
+  <!-- Footer with Tailwind classes -->
+  <footer class="bg-gray-800 text-white mt-16">
+    <div class="container mx-auto px-4 py-16">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-2xl font-bold mb-4">EzyEvents</h3>
+          <p class="mb-2">Contact: +213 0123 456 789</p>
           <p>Email: contact@ezyevents.com</p>
         </div>
-        <div class="col-md-2 mb-4">
-          <h5 class="mb-3">Quick Links</h5>
-          <ul class="footer-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Services</a></li>
-            <li><a href="#">Contact</a></li>
+        <div>
+          <h5 class="text-xl font-semibold mb-4">Quick Links</h5>
+          <ul class="space-y-2">
+            <li><a class="text-gray-300 hover:text-white" href="#">Home</a></li>
+            <li><a class="text-gray-300 hover:text-white" href="#">Services</a></li>
+            <li><a class="text-gray-300 hover:text-white" href="#">Contact</a></li>
           </ul>
         </div>
-        <div class="col-md-2 mb-4">
-          <h5 class="mb-3">Services</h5>
-          <ul class="footer-links">
-            <li><a href="#">Event Planning</a></li>
-            <li><a href="#">Decoration</a></li>
-            <li><a href="#">Catering</a></li>
+        <div>
+          <h5 class="text-xl font-semibold mb-4">Services</h5>
+          <ul class="space-y-2">
+            <li><a class="text-gray-300 hover:text-white" href="#">Event Planning</a></li>
+            <li><a class="text-gray-300 hover:text-white" href="#">Decoration</a></li>
+            <li><a class="text-gray-300 hover:text-white" href="#">Catering</a></li>
           </ul>
         </div>
       </div>
-      <div class="text-center mt-4">
+      <div class="text-center mt-8 pt-8 border-t border-gray-700">
         <p>&copy; 2024 EzyEvents. All rights reserved.</p>
       </div>
     </div>
