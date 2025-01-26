@@ -714,7 +714,7 @@ if __name__ == '__main__':
         # Drop all tables and recreate them
         db.drop_all()
         db.create_all()
-        
+
         # Create admin user
         admin = User(
             email='admin@ezyevents.com',
@@ -726,4 +726,5 @@ if __name__ == '__main__':
         db.session.add(admin)
         db.session.commit()
     
-    app.run(debug=True)
+    # Run the app on 0.0.0.0 and a custom port (optional)
+    app.run(debug=True, host='0.0.0.0', port=5000)
