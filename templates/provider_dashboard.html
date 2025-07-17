@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .kanban-board {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .kanban-column {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .kanban-card {
+        background: white;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .column-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid;
+    }
+    
+    .requests-header { border-color: #ffc107; }
+    .payment-header { border-color: #17a2b8; }
+    .completed-header { border-color: #28a745; }
+</style>
+
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4 rounded-xl">
+        <div class="col-md-12">
+            <div class="card bg-white rounded-xl">
+                <div class="card-body rounded-xl" style="box-shadow: 0 4px 15px rgba(8, 11, 82, 0.152);">
+                    <h2 class="card-title font-semibold text-3xl" >Welcome, <span class="gradient-text"> {{ user.first_name }} {{ user.last_name }}</span></h2>
+                    <p class="card-text mt-3 text-lg">Manage your events and service providers all in one place.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Earnings Summary Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-white">
+                <div class="card-body">
+                    <h4 class="mb-4">Earnings Summary</h4>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h3 class="text-success">{{ "%.2f"|format(total_earnings) }} DZD</h3>
+                            <p class="text-muted mb-0">Total Earnings</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-primary">{{ "%.2f"|format(paid_amount) }} DZD</h3>
+                            <p class="text-muted mb-0">Received Payment</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-warning">{{ "%.2f"|format(pending_amount) }} DZD</h3>
+                            <p class="text-muted mb-0">Pending Payment</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            * Platform fee (20%) is automatically deducted from total earnings
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Quick Actions</h4>
+                    <div class="btn-group">
+                        <button class="btn btn-success mr-2" data-toggle="modal" data-target="#addServiceModal">
+                            <i class="fas fa-plus"></i> Add New Service
+                        </button>
+                        <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#editProfileModal">
+                            <i class="fas fa-user-edit"></i> Edit Profile
+                        </button>
+                        <form action="{{ url_for('toggle_availability') }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn {% if user.is_available %}btn-success{% else %}btn-danger{% endif %}">
+                                <i class="fas fa-toggle-on"></i> 
+                                {% if user.is_available %}Available{% else %}Busy{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Section with Enhanced Display -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4>My Portfolio</h4>
+                        <button class="btn btn-primary" data-toggle="modal" data-target="#addPortfolioModal">
+                            <i class="fas fa-plus"></i> Add Portfolio Item
+                        </button>
+                    </div>
+                    
+                    <div class="row">
+                        {% for item in user.portfolio_items %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card portfolio-card hover:shadow-lg transition-shadow duration-300"
+                                 onclick="showPortfolioDetails('{{ item.id }}')">
+                                {% if item.images %}
+                                <div id="carousel{{ item.id }}" class="carousel slide" data-ride="carousel">
+                                    <div class="carousel-inner">
+                                        {% for image in item.images %}
+                                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                            <img src="{{ url_for('static', filename='uploads/' + image.image_path) }}" 
+                                                 class="d-block w-100" style="height: 200px; object-fit: cover;">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if item.images|length > 1 %}
+                                    <a class="carousel-control-prev" href="#carousel{{ item.id }}" role="button" data-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    </a>
+                                    <a class="carousel-control-next" href="#carousel{{ item.id }}" role="button" data-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.title }}</h5>
+                                    <p class="card-text text-truncate">{{ item.description }}</p>
+                                    <small class="text-muted">Added on: {{ item.created_at.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+        <!-- Pending Requests Column -->
+        <div class="kanban-column">
+            <h4 class="column-header requests-header">
+                New Requests
+                <span class="badge badge-warning">{{ pending_requests|length }}</span>
+            </h4>
+            {% for booking in pending_requests %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <div class="btn-group">
+                        <form action="{{ url_for('accept_booking', booking_id=booking.id) }}" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-success mr-2">Accept</button>
+                        </form>
+                        <form action="{{ url_for('decline_booking', booking_id=booking.id) }}" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-danger">Decline</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- To Pay Column -->
+        <div class="kanban-column">
+            <h4 class="column-header payment-header">
+                Waiting Payment
+                <span class="badge badge-info">{{ to_pay|length }}</span>
+            </h4>
+            {% for booking in to_pay %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#paymentModal{{ booking.id }}">
+                        Confirm Payment
+                    </button>
+                </div>
+
+                <!-- Payment Confirmation Modal -->
+                <div class="modal fade" id="paymentModal{{ booking.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Payment</h5>
+                                <button type="button" class="close" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{{ url_for('confirm_payment', booking_id=booking.id) }}" method="POST">
+                                    <div class="form-group">
+                                        <label>Payment Amount (DZD)</label>
+                                        <input type="number" name="payment_amount" class="form-control" required min="0" step="0.01">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Payment Notes (optional)</label>
+                                        <textarea name="payment_notes" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Scheduled Column -->
+        <div class="kanban-column">
+            <h4 class="column-header scheduled-header">
+                Scheduled Events
+                <span class="badge badge-primary">{{ scheduled|length }}</span>
+            </h4>
+            {% for booking in scheduled %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <span class="badge badge-success">Payment Received</span>
+                    <form action="{{ url_for('complete_booking', booking_id=booking.id) }}" method="POST" class="mt-2">
+                        <button class="btn btn-sm btn-outline-success">Mark Event Complete</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Completed Column -->
+        <div class="kanban-column">
+            <h4 class="column-header completed-header">
+                Completed Events
+                <span class="badge badge-success">{{ completed|length }}</span>
+            </h4>
+            {% for booking in completed %}
+                <div class="kanban-card">
+                    <h5>{{ booking.event.title }}</h5>
+                    <p class="text-muted">
+                        <i class="far fa-calendar"></i> {{ booking.event.date }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ booking.event.location }}
+                    </p>
+                    <span class="badge badge-success">Completed</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Service</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_service') }}" method="POST">
+                    <div class="form-group">
+                        <label>Service Title</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select class="form-control" name="category">
+                            <option value="Event Planning">Event Planning</option>
+                            <option value="Decoration & Styling">Decoration & Styling</option>
+                            <option value="Venue Booking">Venue Booking</option>
+                            <option value="Photography & Videography">Photography & Videography</option>
+                            <option value="Logistics Management">Logistics Management</option>
+                            <option value="Entertainment & Activities">Entertainment & Activities</option>
+                            <option value="Catering Services">Catering Services</option>
+                            <option value="Security & Access Control">Security & Access Control</option>
+                            <option value="Event Technologies">Event Technologies</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Portfolio Modal -->
+<div class="modal fade" id="addPortfolioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Portfolio Item</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_portfolio') }}" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Images (Max 3)</label>
+                        <input type="file" class="form-control-file" name="images" accept="image/*" multiple required>
+                        <small class="text-muted">You can select up to 3 images</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img src="{{ url_for('static', filename='uploads/' + (user.profile_pic or 'default.jpg')) }}?v={{ now }}" 
+                             class="rounded-circle mb-3" 
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                        <form action="{{ url_for('upload_profile_pic') }}" method="POST" enctype="multipart/form-data">
+                            <div class="custom-file mb-3">
+                                <input type="file" class="custom-file-input" name="file" id="profilePic" accept="image/*">
+                                <label class="custom-file-label" for="profilePic">Choose file</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Update Picture</button>
+                        </form>
+                    </div>
+                    <div class="col-md-8">
+                        <form action="{{ url_for('update_profile') }}" method="POST">
+                            <div class="form-group">
+                                <label>About Me</label>
+                                <textarea class="form-control" name="about" rows="3">{{ user.about or '' }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Experience</label>
+                                <textarea class="form-control" name="experience" rows="3">{{ user.experience or '' }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Information</label>
+                                <input type="tel" class="form-control mb-2" name="phone" value="{{ user.phone or '' }}" placeholder="Phone">
+                                <input type="text" class="form-control" name="address" value="{{ user.address or '' }}" placeholder="Address">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Portfolio Details Modal -->
+<div class="modal fade" id="portfolioDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="portfolioDetailTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Main Image Display -->
+                        <div id="portfolioMainImage" class="mb-3">
+                            <img src="" class="img-fluid rounded w-100" style="max-height: 400px; object-fit: contain;">
+                        </div>
+                        <!-- Thumbnail Gallery -->
+                        <div class="d-flex justify-content-start align-items-center" id="portfolioThumbnails">
+                            <!-- Thumbnails will be inserted here -->
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="mb-3">Details</h5>
+                        <p id="portfolioDetailDescription"></p>
+                        <small class="text-muted" id="portfolioDetailDate"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPortfolioDetails(itemId) {
+    fetch(`/portfolio/${itemId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            // Set title and description
+            document.getElementById('portfolioDetailTitle').textContent = data.title;
+            document.getElementById('portfolioDetailDescription').textContent = data.description;
+            document.getElementById('portfolioDetailDate').textContent = `Added on: ${data.created_at}`;
+
+            // Set main image to first image
+            const mainImage = document.querySelector('#portfolioMainImage img');
+            if (data.images.length > 0) {
+                mainImage.src = `/static/uploads/${data.images[0].path}`;
+            }
+
+            // Create thumbnails
+            const thumbnailsContainer = document.getElementById('portfolioThumbnails');
+            thumbnailsContainer.innerHTML = '';
+            
+            data.images.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'mr-2 cursor-pointer';
+                thumbnail.innerHTML = `
+                    <img src="/static/uploads/${image.path}" 
+                         class="img-thumbnail" 
+                         style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;"
+                         onclick="updateMainImage('/static/uploads/${image.path}')">
+                `;
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+
+            // Show modal
+            $('#portfolioDetailsModal').modal('show');
+        });
+}
+
+function updateMainImage(src) {
+    document.querySelector('#portfolioMainImage img').src = src;
+}
+</script>
+
+<style>
+.cursor-pointer {
+    cursor: pointer;
+}
+
+#portfolioThumbnails img {
+    transition: opacity 0.3s ease;
+}
+
+#portfolioThumbnails img:hover {
+    opacity: 0.8;
+}
+
+.modal-xl {
+    max-width: 1140px;
+}
+</style>
+{% endblock %}

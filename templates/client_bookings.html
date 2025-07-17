@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">My Event Bookings</h2>
+            
+            {% if events %}
+                {% for event in events %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>{{ event.title }}</h4>
+                        <div class="text-muted">
+                            <i class="far fa-calendar"></i> {{ event.date }}
+                            <i class="fas fa-map-marker-alt ml-3"></i> {{ event.location }}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="mb-3">Service Providers</h5>
+                        {% if event.bookings %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Provider Name</th>
+                                            <th>Service Category</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for booking in event.bookings %}
+                                        <tr>
+                                            <td>
+                                                {{ booking.provider.first_name }} {{ booking.provider.last_name }}
+                                            </td>
+                                            <td>{{ booking.provider.service_category }}</td>
+                                            <td>
+                                                {% if booking.status == 'confirmed' and booking.payment_status == 'paid' %}
+                                                    <div>
+                                                        <span class="badge badge-success">Payment Confirmed</span>
+                                                        <br>
+                                                        <small class="text-muted">Amount: {{ booking.payment_amount }} DZD</small>
+                                                    </div>
+                                                {% elif booking.status == 'pending' %}
+                                                    <span class="badge badge-warning">Pending</span>
+                                                {% elif booking.status == 'confirmed' %}
+                                                    <span class="badge badge-info">Awaiting Payment</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if booking.status == 'confirmed' %}
+                                                    <button class="btn btn-sm btn-outline-primary" 
+                                                            data-toggle="modal" 
+                                                            data-target="#providerModal{{ booking.provider.id }}">
+                                                        <i class="fas fa-envelope"></i> Contact
+                                                    </button>
+                                                    
+                                                    <!-- Provider Contact Modal -->
+                                                    <div class="modal fade" id="providerModal{{ booking.provider.id }}" tabindex="-1">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Provider Contact Information</h5>
+                                                                    <button type="button" class="close" data-dismiss="modal">
+                                                                        <span>&times;</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="card">
+                                                                        <div class="card-body">
+                                                                            <h5 class="card-title">{{ booking.provider.first_name }} {{ booking.provider.last_name }}</h5>
+                                                                            <hr>
+                                                                            <p><strong>Email:</strong> {{ booking.provider.email }}</p>
+                                                                            <p><strong>Phone:</strong> {{ booking.provider.phone }}</p>
+                                                                            <p><strong>Address:</strong> {{ booking.provider.address }}</p>
+                                                                            <p><strong>Wilaya:</strong> {{ booking.provider.wilaya }}</p>
+                                                                            <p><strong>Service Category:</strong> {{ booking.provider.service_category }}</p>
+                                                                            <p><strong>Experience:</strong> {{ booking.provider.experience }}</p>
+                                                                            <p><strong>Certifications:</strong> {{ booking.provider.certification }}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% elif booking.status == 'pending' %}
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                        Awaiting Response
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No service providers booked for this event yet.</p>
+                            <a href="{{ url_for('browse_providers') }}" class="btn btn-primary">
+                                Find Service Providers
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <h5>No Events Found</h5>
+                    <p>You haven't created any events yet. Would you like to create one?</p>
+                    <a href="{{ url_for('client_dashboard') }}" class="btn btn-primary">
+                        Create an Event
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

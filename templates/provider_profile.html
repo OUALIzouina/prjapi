@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <!-- Provider Header -->
+    <div class="row mb-5">
+        <div class="col-md-4 text-center">
+            <img src="{{ url_for('static', filename='uploads/' + (provider.profile_pic or 'default.jpg')) }}" 
+                 class="rounded-circle mb-3" 
+                 style="width: 200px; height: 200px; object-fit: cover;">
+        </div>
+        <div class="col-md-8">
+            <h2 class="mb-3">{{ provider.first_name }} {{ provider.last_name }}</h2>
+            <p class="text-muted">{{ provider.service_category }}</p>
+            <div class="mb-3">
+                <span class="badge badge-primary mr-2">{{ provider.wilaya }}</span>
+                <span class="badge {% if is_available %}badge-success{% else %}badge-danger{% endif %}">
+                    {{ 'Available' if is_available else 'Busy' }}
+                </span>
+            </div>
+            <p>{{ provider.about }}</p>
+            {% if current_user.is_authenticated and current_user.role == 'client' %}
+                <button class="btn btn-primary" data-toggle="modal" data-target="#bookingModal">
+                    Request Booking
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Experience & Qualifications -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-4">Experience & Qualifications</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Experience</h5>
+                            <p>{{ provider.experience }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Certifications</h5>
+                            <p>{{ provider.certification }}</p>
+                            <h5>Education</h5>
+                            <p>{{ provider.study_degree }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="mb-4">Portfolio</h3>
+            <div class="row">
+                {% for item in provider.portfolio_items %}
+                <div class="col-md-4 mb-4">
+                    <div class="card portfolio-card" onclick="showPortfolioDetails('{{ item.id }}')">
+                        {% if item.images %}
+                        <div id="carousel{{ item.id }}" class="carousel slide" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for image in item.images %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <img src="{{ url_for('static', filename='uploads/' + image.image_path) }}" 
+                                         class="d-block w-100" style="height: 200px; object-fit: cover;">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5>{{ item.title }}</h5>
+                            <p class="text-truncate">{{ item.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+{% if current_user.is_authenticated and current_user.role == 'client' %}
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Booking</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('request_booking', provider_id=provider.id) }}" method="POST">
+                    <div class="form-group">
+                        <label>Select Event</label>
+                        <select name="event_id" class="form-control" required>
+                            {% for event in current_user.events %}
+                            <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Portfolio Details Modal -->
+<div class="modal fade" id="portfolioDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="portfolioDetailTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Main Image Display -->
+                        <div id="portfolioMainImage" class="mb-3">
+                            <img src="" class="img-fluid rounded w-100" style="max-height: 400px; object-fit: contain;">
+                        </div>
+                        <!-- Thumbnail Gallery -->
+                        <div class="d-flex justify-content-start align-items-center" id="portfolioThumbnails">
+                            <!-- Thumbnails will be inserted here -->
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="mb-3">Details</h5>
+                        <p id="portfolioDetailDescription"></p>
+                        <small class="text-muted" id="portfolioDetailDate"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPortfolioDetails(itemId) {
+    fetch(`/portfolio/${itemId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            // Set title and description
+            document.getElementById('portfolioDetailTitle').textContent = data.title;
+            document.getElementById('portfolioDetailDescription').textContent = data.description;
+            document.getElementById('portfolioDetailDate').textContent = `Added on: ${data.created_at}`;
+
+            // Set main image to first image
+            const mainImage = document.querySelector('#portfolioMainImage img');
+            if (data.images.length > 0) {
+                mainImage.src = `/static/uploads/${data.images[0].path}`;
+            }
+
+            // Create thumbnails
+            const thumbnailsContainer = document.getElementById('portfolioThumbnails');
+            thumbnailsContainer.innerHTML = '';
+            
+            data.images.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'mr-2 cursor-pointer';
+                thumbnail.innerHTML = `
+                    <img src="/static/uploads/${image.path}" 
+                         class="img-thumbnail" 
+                         style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;"
+                         onclick="updateMainImage('/static/uploads/${image.path}')">
+                `;
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+
+            // Show modal
+            $('#portfolioDetailsModal').modal('show');
+        });
+}
+
+function updateMainImage(src) {
+    document.querySelector('#portfolioMainImage img').src = src;
+}
+</script>
+
+<style>
+.cursor-pointer {
+    cursor: pointer;
+}
+
+#portfolioThumbnails img {
+    transition: opacity 0.3s ease;
+}
+
+#portfolioThumbnails img:hover {
+    opacity: 0.8;
+}
+
+.modal-xl {
+    max-width: 1140px;
+}
+</style>
+
+{% endblock %}

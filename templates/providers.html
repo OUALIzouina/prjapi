@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4 mb-12" style="margin-bottom: 18%;">
+    <!-- Event Selection Modal -->
+    <div class="modal fade" id="eventSelectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Event</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookingForm" method="POST">
+                        <div class="form-group">
+                            <label>Choose Event</label>
+                            <select name="event_id" class="form-control" required>
+                                {% for event in events %}
+                                <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Request Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ url_for('search_providers') }}" method="GET" class="row">
+                <div class="col-md-4">
+                    <select name="category" class="form-control">
+                        <option value="">All Categories</option>
+                        <option value="Event Planning">Event Planning</option>
+                        <option value="Decoration & Styling">Decoration & Styling</option>
+                        <option value="Venue Booking">Venue Booking</option>
+                        <option value="Photography & Videography">Photography & Videography</option>
+                        <option value="Logistics Management">Logistics Management</option>
+                        <option value="Entertainment & Activities">Entertainment & Activities</option>
+                        <option value="Catering Services">Catering Services</option>
+                        <option value="Security & Access Control">Security & Access Control</option>
+                        <option value="Event Technologies">Event Technologies</option>
+                        <!-- Add other categories -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="wilaya" class="form-control">
+                        <option value="">All Wilayas</option>
+                        <option value="1-Adrar">1-Adrar</option>
+                        <option value="2-Chlef">2-Chlef</option>
+                        <option value="3-Laghouat">3-Laghouat</option>
+                        <option value="4-Oum El Bouaghi">4-Oum El Bouaghi</option>
+                        <option value="5-Batna">5-Batna</option>
+                        <option value="6-Béjaïa">6-Béjaïa</option>
+                        <option value="7-Biskra">7-Biskra</option>
+                        <option value="8-Béchar">8-Béchar</option>
+                        <option value="9-Blida">9-Blida</option>
+                        <option value="10-Bouira">10-Bouira</option>
+                        <option value="11-Tamanrasset">11-Tamanrasset</option>
+                        <option value="12-Tébessa">12-Tébessa</option>
+                        <option value="13-Tlemcen">13-Tlemcen</option>
+                        <option value="14-Tiaret">14-Tiaret</option>
+                        <option value="15-Tizi Ouzou">15-Tizi Ouzou</option>
+                        <option value="16-Alger">16-Alger</option>
+                        <option value="17-Djelfa">17-Djelfa</option>
+                        <option value="18-Jijel">18-Jijel</option>
+                        <option value="19-Sétif">19-Sétif</option>
+                        <option value="20-Saïda">20-Saïda</option>
+                        <option value="21-Skikda">21-Skikda</option>
+                        <option value="22-Sidi Bel Abbès">22-Sidi Bel Abbès</option>
+                        <option value="23-Annaba">23-Annaba</option>
+                        <option value="24-Guelma">24-Guelma</option>
+                        <option value="25-Constantine">25-Constantine</option>
+                        <option value="26-Médéa">26-Médéa</option>
+                        <option value="27-Mostaganem">27-Mostaganem</option>
+                        <option value="28-MSila">28-MSila</option>
+                        <option value="29-Mascara">29-Mascara</option>
+                        <option value="30-Ouargla">30-Ouargla</option>
+                        <option value="31-Oran">31-Oran</option>
+                        <option value="32-El Bayadh">32-El Bayadh</option>
+                        <option value="33-Illizi">33-Illizi</option>
+                        <option value="34-Bordj Bou Arréridj">34-Bordj Bou Arréridj</option>
+                        <option value="35-Boumerdès">35-Boumerdès</option>
+                        <option value="36-El Tarf">36-El Tarf</option>
+                        <option value="37-Tindouf">37-Tindouf</option>
+                        <option value="38-Tissemsilt">38-Tissemsilt</option>
+                        <option value="39-El Oued">39-El Oued</option>
+                        <option value="40-Khenchela">40-Khenchela</option>
+                        <option value="41-Souk Ahras">41-Souk Ahras</option>
+                        <option value="42-Tipaza">42-Tipaza</option>
+                        <option value="43-Mila">43-Mila</option>
+                        <option value="44-Aïn Defla">44-Aïn Defla</option>
+                        <option value="45-Naâma">45-Naâma</option>
+                        <option value="46-Aïn Témouchent">46-Aïn Témouchent</option>
+                        <option value="47-Ghardaïa">47-Ghardaïa</option>
+                        <option value="48-Relizane">48-Relizane</option>
+                        <!-- Add wilayas -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Providers Grid -->
+    <div class="row">
+        {% for provider in providers %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="position-relative">
+                    {% if provider.profile_pic %}
+                    <img src="{{ url_for('static', filename='uploads/' + provider.profile_pic) }}" 
+                         class="card-img-top" alt="{{ provider.first_name }}"
+                         style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='uploads/default.jpg') }}" 
+                         class="card-img-top" alt="Default profile"
+                         style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="position-absolute top-0 right-0 m-2">
+                        <span class="badge {% if provider.is_available %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ 'Available' if provider.is_available else 'Busy' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ provider.first_name }} {{ provider.last_name }}</h5>
+                    <p class="card-text">{{ provider.service_category }}</p>
+                    <p class="text-muted">{{ provider.wilaya }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('provider_profile', provider_id=provider.id) }}" 
+                           class="btn btn-primary">View Profile</a>
+                        {% if provider.is_available %}
+                        <button class="btn btn-success btn-sm" 
+                                onclick="showBookingModal('{{ provider.id }}')"
+                                {% if not events %}disabled{% endif %}
+                                title="{% if not events %}Please create an event first{% endif %}">
+                            Book Now
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function showBookingModal(providerId) {
+    const form = document.getElementById('bookingForm');
+    form.action = "{{ url_for('request_booking', provider_id=0) }}".replace('0', providerId);
+    $('#eventSelectionModal').modal('show');
+}
+</script>
+{% endblock %}
